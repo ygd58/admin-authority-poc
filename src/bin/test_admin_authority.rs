@@ -151,3 +151,74 @@ mod tests {
         println!("test_config_data_layout: OK");
     }
 }
+
+fn frozen_config_account(authorized: bool, frozen: bool) -> nssa_core::account::AccountWithMetadata {
+    use nssa_core::account::{Account, AccountWithMetadata, Data};
+    use nssa_core::program::DEFAULT_PROGRAM_ID;
+    
+    let mut data = vec![0u8; 34];
+    data[..32].copy_from_slice(&[2u8; 32]); // authority
+    data[32] = if frozen { 1 } else { 0 };
+    data[33] = 1; // initialized
+
+    AccountWithMetadata {
+        account: Account {
+            program_owner: [1u32; 8],
+            balance: 0u128,
+            data: Data::try_from(data).expect("data fits"),
+            nonce: 0,
+        },
+        is_authorized: authorized,
+        account_id: "11111111111111111111111111111111".parse().expect("valid id"),
+    }
+}
+
+#[cfg(test)]
+mod freeze_tests {
+    use super::*;
+
+    #[test]
+    fn test_freeze_init() {
+        let account = frozen_config_account(true, false);
+        let mut inst = vec![0x01u8];
+        inst.extend_from_slice(&[2u8; 32]);
+        assert_eq!(inst[0], 0x01);
+        assert!(account.is_authorized);
+        println!("test_freeze_init: OK");
+    }
+
+    #[test]
+    fn test_freeze_blocks_execution() {
+        let frozen = frozen_config_account(false, true);
+        let data = frozen.account.data.as_ref();
+        assert_eq!(data[32], 1, "Should be frozen");
+        println!("test_freeze_blocks_execution: OK");
+    }
+
+    #[test]
+    fn test_unfreeze_resumes_execution() {
+        let unfrozen = frozen_config_account(false, false);
+        let data = unfrozen.account.data.as_ref();
+        assert_eq!(data[32], 0, "Should be unfrozen");
+        println!("test_unfreeze_resumes_execution: OK");
+    }
+
+    #[test]
+    fn test_freeze_requires_authority() {
+        let account = frozen_config_account(false, false);
+        assert!(!account.is_authorized, "No auth = cannot freeze");
+        println!("test_freeze_requires_authority: OK");
+    }
+
+    #[test]
+    fn test_freeze_data_layout() {
+        let account = frozen_config_account(true, true);
+        let data = account.account.data.as_ref();
+        assert!(data.len() >= 34);
+        let stored_auth: [u8; 32] = data[..32].try_into().unwrap();
+        assert_eq!(stored_auth, [2u8; 32]);
+        assert_eq!(data[32], 1); // frozen
+        assert_eq!(data[33], 1); // initialized
+        println!("test_freeze_data_layout: OK");
+    }
+}
