@@ -26,7 +26,8 @@ fn get_admin(data: &[u8]) -> [u8; 32] {
     admin
 }
 
-_fn get_config_value(data: &[u8]) -> u64 {
+#[allow(dead_code)]
+fn get_config_value(data: &[u8]) -> u64 {
     if data.len() >= 40 {
         u64::from_le_bytes(data[32..40].try_into().unwrap())
     } else {
