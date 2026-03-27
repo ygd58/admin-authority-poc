@@ -1,0 +1,21 @@
+[scaffold]
+version = "0.1.0"
+cache_root = "/root/.cache/logos-scaffold"
+
+[repos.lssa]
+url = "https://github.com/logos-blockchain/lssa.git"
+source = "https://github.com/logos-blockchain/lssa.git"
+path = "/root/.cache/logos-scaffold/repos/lssa"
+pin = "767b5afd388c7981bcdf6f5b5c80159607e07e5b"
+
+[wallet]
+binary = "wallet"
+home_dir = ".scaffold/wallet"
+
+[framework]
+kind = "default"
+version = "0.1.0"
+
+[framework.idl]
+spec = "lssa-idl/0.1.0"
+path = "idl"
